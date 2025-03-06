@@ -1,0 +1,98 @@
+import pandas as pd
+import sklearn
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+import numpy as np
+
+def celsius_to_fahrenheit(temp_c):
+    """Convert Celsius to Fahrenheit"""
+    return (temp_c * 9 / 5) + 32
+
+def fahrenheit_to_celsius(temp_f):
+    """Convert Fahrenheit to Celsius"""
+    return (temp_f - 32) * 5 / 9
+
+
+def calculate_heat_index(T_C, RH):
+    """Calculate Heat Index when temperature is in Celsius"""
+    # Convert Celsius to Fahrenheit
+    T_F = celsius_to_fahrenheit(T_C)
+
+    # If temperature is below 80°F (~26.7°C), Heat Index is just the temperature
+    if T_F < 80:
+        return T_C
+
+        # Heat Index formula (NWS)
+    HI_F = (-42.379 +
+            2.04901523 * T_F +
+            10.14333127 * RH -
+            0.22475541 * T_F * RH -
+            6.83783e-3 * T_F ** 2 -
+            5.481717e-2 * RH ** 2 +
+            1.22874e-3 * T_F ** 2 * RH +
+            8.5282e-4 * T_F * RH ** 2 -
+            1.99e-6 * T_F ** 2 * RH ** 2)
+
+    # Convert Heat Index back to Celsius
+    HI_C = fahrenheit_to_celsius(HI_F)
+
+    return round(HI_C, 2)
+
+
+# Load in the csv files
+bronxCSV = pd.read_csv("EY Temperature Data(Bronx).csv")
+print(bronxCSV.head())
+
+# Get the column names for applying the function
+print(bronxCSV.columns)
+
+manhattanCSV = pd.read_csv("EY Temperature Data(Manhattan).csv")
+print(manhattanCSV.head())
+
+# Add columns that have the heat index calculated from the temperatures and humidities
+bronxCSV["Heat Index"] = bronxCSV.apply(lambda row: calculate_heat_index(row['Air Temp at Surface [degC]'], row['Relative Humidity [percent]']), axis=1)
+print(bronxCSV['Heat Index'])
+
+manhattanCSV["Heat Index"] = manhattanCSV.apply(lambda row: calculate_heat_index(row['Air Temp at Surface [degC]'], row['Relative Humidity [percent]']), axis=1)
+print(manhattanCSV['Heat Index'])
+
+
+# Create arrays of independent variables
+#bronxSF = np.array(bronxCSV['Solar Flux [W/m^2]']).reshape((-1, 1))
+#print(bronxSF)
+
+#bronxIndependent = np.array([bronxCSV['Avg Wind Speed [m/s]'], bronxCSV['Solar Flux [W/m^2]']])
+bronxIndependent = bronxCSV[['Avg Wind Speed [m/s]', 'Solar Flux [W/m^2]']].values
+
+#manhattanIndependent = np.array([manhattanCSV['Avg Wind Speed [m/s]'], manhattanCSV['Solar Flux [W/m^2]']])
+manhattanIndependent = manhattanCSV[['Avg Wind Speed [m/s]', 'Solar Flux [W/m^2]']].values
+
+# Dependent
+bronxHI = np.array(bronxCSV['Heat Index']).reshape((-1, 1))
+
+manhattanHI = np.array(manhattanCSV['Heat Index']).reshape((-1, 1))
+
+bronx_x_train, bronx_x_test, bronx_y_train, bronx_y_test = train_test_split(
+  bronxIndependent,bronxHI , random_state=104,test_size=0.1, shuffle=True)
+
+manhattan_x_train, manhattan_x_test, manhattan_y_train, manhattan_y_test = train_test_split(
+  manhattanIndependent,manhattanHI , random_state=104,test_size=0.1, shuffle=True)
+
+print('bronx_x_train : ')
+print(bronx_x_train.head())
+print(bronx_x_train.shape)
+
+print('')
+print('bronx_x_test : ')
+print(bronx_x_test.head())
+print(bronx_x_test.shape)
+
+print('')
+print('bronx_y_train : ')
+print(bronx_y_train.head())
+print(bronx_y_train.shape)
+
+print('')
+print('manhattan_y_test : ')
+print(manhattan_y_test.head())
+print(manhattan_y_test.shape)
