@@ -3,6 +3,11 @@ import sklearn
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import numpy as np
+from sklearn import linear_model
+import sklearn.model_selection
+from sklearn.utils import shuffle
+
+
 
 def celsius_to_fahrenheit(temp_c):
     """Convert Celsius to Fahrenheit"""
@@ -77,6 +82,12 @@ bronx_x_train, bronx_x_test, bronx_y_train, bronx_y_test = train_test_split(
 
 manhattan_x_train, manhattan_x_test, manhattan_y_train, manhattan_y_test = train_test_split(
   manhattanIndependent,manhattanHI , random_state=104,test_size=0.1, shuffle=True)
+
+bronx_model = linear_model.LinearRegression() #creating the model
+bronx_model.fit(bronx_x_train, bronx_y_train) #finds a best fit line using the training data and stores that line in linear 
+
+accuracy = bronx_model.score(bronx_x_test, bronx_y_test) #returns a value that defines the accuracy of the model
+print ("accuracy of the model is: ", accuracy)
 
 print('bronx_x_train : ')
 print(bronx_x_train.head())
