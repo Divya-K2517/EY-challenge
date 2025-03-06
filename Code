@@ -6,6 +6,8 @@ import numpy as np
 from sklearn import linear_model
 import sklearn.model_selection
 from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
+
 
 
 
@@ -61,49 +63,63 @@ print(bronxCSV['Heat Index'])
 manhattanCSV["Heat Index"] = manhattanCSV.apply(lambda row: calculate_heat_index(row['Air Temp at Surface [degC]'], row['Relative Humidity [percent]']), axis=1)
 print(manhattanCSV['Heat Index'])
 
+# Add a borough identifier column to each dataset
+bronxCSV['Borough'] = 'Bronx'
+manhattanCSV['Borough'] = 'Manhattan'
+
+# Now combine the datasets
+bmCombined = pd.concat([bronxCSV, manhattanCSV], ignore_index=True)
 
 # Create arrays of independent variables
 #bronxSF = np.array(bronxCSV['Solar Flux [W/m^2]']).reshape((-1, 1))
 #print(bronxSF)
 
 #bronxIndependent = np.array([bronxCSV['Avg Wind Speed [m/s]'], bronxCSV['Solar Flux [W/m^2]']])
-bronxIndependent = bronxCSV[['Avg Wind Speed [m/s]', 'Solar Flux [W/m^2]']].values
-
-#manhattanIndependent = np.array([manhattanCSV['Avg Wind Speed [m/s]'], manhattanCSV['Solar Flux [W/m^2]']])
-manhattanIndependent = manhattanCSV[['Avg Wind Speed [m/s]', 'Solar Flux [W/m^2]']].values
+bmIndependent = bmCombined[['Avg Wind Speed [m/s]', 'Solar Flux [W/m^2]']].values
 
 # Dependent
-bronxHI = np.array(bronxCSV['Heat Index']).reshape((-1, 1))
+bmHI = np.array(bmCombined['Heat Index']).reshape((-1, 1))
 
-manhattanHI = np.array(manhattanCSV['Heat Index']).reshape((-1, 1))
+bm_x_train, bm_x_test, bm_y_train, bm_y_test = train_test_split(
+  bmIndependent,bmHI , random_state=104,test_size=0.1, shuffle=True)
 
-bronx_x_train, bronx_x_test, bronx_y_train, bronx_y_test = train_test_split(
-  bronxIndependent,bronxHI , random_state=104,test_size=0.1, shuffle=True)
+bm_model = linear_model.LinearRegression() #creating the model
+bm_model.fit(bm_x_train, bm_y_train) #finds a best fit line using the training data and stores that line in linear 
+bm_predictions = bm_model.predict(bm_x_test)
 
-manhattan_x_train, manhattan_x_test, manhattan_y_train, manhattan_y_test = train_test_split(
-  manhattanIndependent,manhattanHI , random_state=104,test_size=0.1, shuffle=True)
 
-bronx_model = linear_model.LinearRegression() #creating the model
-bronx_model.fit(bronx_x_train, bronx_y_train) #finds a best fit line using the training data and stores that line in linear 
-
-accuracy = bronx_model.score(bronx_x_test, bronx_y_test) #returns a value that defines the accuracy of the model
+accuracy = bm_model.score(bm_x_test, bm_y_test) #returns a value that defines the accuracy of the model
 print ("accuracy of the model is: ", accuracy)
 
-print('bronx_x_train : ')
-print(bronx_x_train.head())
-print(bronx_x_train.shape)
+avg_list = []
+for i in (bm_x_test):
+    avg = ((i[0]+ i[1])/2)
+    avg_list.append(avg)
 
-print('')
-print('bronx_x_test : ')
-print(bronx_x_test.head())
-print(bronx_x_test.shape)
+plt.scatter(avg_list, bm_predictions, color = "red", label="predicted values")
+plt.scatter(avg_list, bm_y_test, color = "black", label = "actual values")
+plt.xlabel("Average of the first two grades")
+plt.ylabel("Final Grade")
+plt.legend()
+plt.show()
 
-print('')
-print('bronx_y_train : ')
-print(bronx_y_train.head())
-print(bronx_y_train.shape)
 
-print('')
-print('manhattan_y_test : ')
-print(manhattan_y_test.head())
-print(manhattan_y_test.shape)
+
+# print('bronx_x_train : ')
+# print(bronx_x_train.head())
+# print(bronx_x_train.shape)
+
+# print('')
+# print('bronx_x_test : ')
+# print(bronx_x_test.head())
+# print(bronx_x_test.shape)
+
+# print('')
+# print('bronx_y_train : ')
+# print(bronx_y_train.head())
+# print(bronx_y_train.shape)
+
+# print('')
+# print('manhattan_y_test : ')
+# print(manhattan_y_test.head())
+# print(manhattan_y_test.shape)
